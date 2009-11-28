@@ -16,6 +16,8 @@ module God
     #               e.g. 500 or '500' or [404, 500] or %w{404 500}
     #     +code_is_not+ trigger if the response code IS NOT one of these
     #                   e.g. 200 or '200' or [200, 302] or %w{200 302}
+    #     +body_contains+ trigger if the response body CONTAINS one of the
+    #                     given strings
     #  Optional
     #     +port+ is the port to connect (default 80)
     #     +path+ is the path to connect (default '/')
@@ -65,6 +67,7 @@ module God
     class HttpResponseCode < PollCondition
       attr_accessor :code_is,      # e.g. 500 or '500' or [404, 500] or %w{404 500}
                     :code_is_not,  # e.g. 200 or '200' or [200, 302] or %w{200 302}
+                    :contains,     # e.g. 'server error'
                     :times,        # e.g. 3 or [3, 5]
                     :host,         # e.g. www.example.com
                     :port,         # e.g. 8080
@@ -84,6 +87,7 @@ module God
       def prepare
         self.code_is = Array(self.code_is).map { |x| x.to_i } if self.code_is
         self.code_is_not = Array(self.code_is_not).map { |x| x.to_i } if self.code_is_not
+        self.contains = Array(self.contains).map { |x| x.downcase } if self.contains
         
         if self.times.kind_of?(Integer)
           self.times = [self.times, self.times]
@@ -115,6 +119,7 @@ module God
         end
         
         actual_response_code = response.code.to_i
+        actual_response_body = response.body.downcase
         if self.code_is && self.code_is.include?(actual_response_code)
           pass(actual_response_code)
         elsif self.code_is_not && !self.code_is_not.include?(actual_response_code)
@@ -122,6 +127,20 @@ module God
         else
           fail(actual_response_code)
         end
+        
+        if self.contains
+          found = false
+
+          self.contains.each do |word|
+            if actual_response_body.include?(word)
+              found = true
+              break
+            end
+          end
+          
+          found ? fail(actual_response_body.size) : pass(actual_response_body.size)
+        end
+        
       rescue Errno::ECONNREFUSED
         self.code_is ? fail('Refused') : pass('Refused')
       rescue Errno::ECONNRESET
