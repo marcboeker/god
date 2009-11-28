@@ -132,13 +132,16 @@ module God
           found = false
 
           self.contains.each do |word|
-            if actual_response_body.include?(word)
+            if !found && actual_response_body.include?(word)
               found = true
-              break
             end
           end
-          
-          found ? fail(actual_response_body.size) : pass(actual_response_body.size)
+
+          if !found
+            fail('no bad words found')
+          else
+            pass('found bad words')
+          end
         end
         
       rescue Errno::ECONNREFUSED
