@@ -16,7 +16,7 @@ module God
     #               e.g. 500 or '500' or [404, 500] or %w{404 500}
     #     +code_is_not+ trigger if the response code IS NOT one of these
     #                   e.g. 200 or '200' or [200, 302] or %w{200 302}
-    #     +body_contains+ trigger if the response body CONTAINS one of the
+    #     +contains+ trigger if the response body CONTAINS one of the
     #                     given strings
     #  Optional
     #     +port+ is the port to connect (default 80)
@@ -67,7 +67,7 @@ module God
     class HttpResponseCode < PollCondition
       attr_accessor :code_is,      # e.g. 500 or '500' or [404, 500] or %w{404 500}
                     :code_is_not,  # e.g. 200 or '200' or [200, 302] or %w{200 302}
-                    :contains,     # e.g. 'server error'
+                    :contains,     # e.g. ['server error', 'failure']
                     :times,        # e.g. 3 or [3, 5]
                     :host,         # e.g. www.example.com
                     :port,         # e.g. 8080
